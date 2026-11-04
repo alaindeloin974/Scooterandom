@@ -27,6 +27,9 @@ function weightedPick(list:string[], difficulty:Difficulty):string {
 }
 const pick=(list:string[],d:Difficulty)=>weightedPick(list,d);
 const rand=(min:number,max:number)=>Math.floor(Math.random()*(max-min+1))+min;
+const comboLength:Record<Difficulty,[number,number]> = {
+  Easy:[3,5], Medium:[4,6], Hard:[5,7], Impossible:[6,9]
+};
 const add=(out:Stage[],type:string,trick:string)=>{if(trick!=="No trick")out.push({type,trick});};
 const pickVisible=(list:string[],d:Difficulty)=>pick(list.filter(x=>x!=="No trick"),d);
 const addExit=(out:Stage[],d:Difficulty,obstacle:Obstacle)=> {
@@ -53,7 +56,8 @@ export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail
   }
   if(obstacle==="Manual Pad"){
     add(out,"Approach",a());add(out,"Rotation",r());add(out,"Scooter trick",s());
-    const target=rand(5,9);
+    const [minLength,maxLength]=comboLength[difficulty];
+    const target=rand(minLength,maxLength);
     add(out,"Manual pad",pick(manualRides,difficulty));
     let previousRide="";
     while(out.length<target){
@@ -66,7 +70,8 @@ export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail
   }
   const grinds=obstacle==="Rail"?(squareRail?railGrinds:railGrinds.filter(x=>x!=="Blunt"&&x!=="Backside Blunt")):ledgeGrinds;
   add(out,"Approach",a());add(out,"Rotation",r());add(out,"Scooter trick",s());
-  const target=rand(5,9);
+  const [minLength,maxLength]=comboLength[difficulty];
+  const target=rand(minLength,maxLength);
   let previousGrind="";
   while(out.length<target){
     const remaining=target-out.length;
