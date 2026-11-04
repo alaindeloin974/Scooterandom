@@ -68,10 +68,35 @@ export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail
     }
     return out;
   }
-  const grinds=obstacle==="Rail"?(squareRail?railGrinds:railGrinds.filter(x=>x!=="Blunt"&&x!=="Backside Blunt")):ledgeGrinds;
-  add(out,"Approach",a());add(out,"Rotation",r());add(out,"Scooter trick",s());
   const [minLength,maxLength]=comboLength[difficulty];
   const target=rand(minLength,maxLength);
+  if(obstacle==="Rail"){
+    const grinds=squareRail?railGrinds:railGrinds.filter(x=>x!=="Blunt"&&x!=="Backside Blunt");
+    // Approach, rotation, scooter trick and exit are optional; at least one grind is guaranteed.
+    if(out.length<target-1&&Math.random()<0.5)add(out,"Approach",a());
+    if(out.length<target-1&&Math.random()<0.5)add(out,"Rotation",r());
+    if(out.length<target-1&&Math.random()<0.5)add(out,"Scooter trick",s());
+    let previousGrind=pick(grinds,difficulty);
+    add(out,"Rail grind",previousGrind);
+    while(out.length<target){
+      if(Math.random()<0.45){
+        const before=out.length;
+        addExit(out,difficulty,obstacle);
+        if(out.length===before){
+          const available=grinds.filter(x=>x!==previousGrind);
+          previousGrind=pick(available,difficulty);
+          add(out,"Rail grind",previousGrind);
+        }
+      } else {
+        const available=grinds.filter(x=>x!==previousGrind);
+        previousGrind=pick(available,difficulty);
+        add(out,"Rail grind",previousGrind);
+      }
+    }
+    return out;
+  }
+  const grinds=ledgeGrinds;
+  add(out,"Approach",a());add(out,"Rotation",r());add(out,"Scooter trick",s());
   let previousGrind="";
   while(out.length<target){
     const remaining=target-out.length;
@@ -79,7 +104,7 @@ export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail
     else {
       const available=grinds.filter(x=>x!==previousGrind);
       const grind=pick(available,difficulty);
-      add(out,obstacle==="Rail"?"Rail grind":"Ledge grind",grind);
+      add(out,"Ledge grind",grind);
       previousGrind=grind;
     }
   }
