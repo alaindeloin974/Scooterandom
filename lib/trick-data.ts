@@ -5,7 +5,10 @@ export type Stage = { type: string; trick: string };
 export const approach = ["No trick","Fakie","Wiskas","X-up ride","Switch","Tap","Nollie","Fakie Manual","Fakie Nose Manual"];
 export const rotations = ["No trick","180° Frontside","180° Backside","360° Backside","360° Frontside"];
 export const scooter = ["No trick","Bar","Tailwhip","X-up","No hand","Tabletop","Lookback","Tail grab","Double Barspin","Nothing","Banihana","Double Whip","Double Heel","Fullwhip","Full Heel","Finger","Fingerheel","Briwhip","Rotorwhip","Rotor Heel","Fulltwist","Frontbri","Inward","Fullheeltwist","Rotortwist","Rotorheeltwist"];
-export const railGrinds = ["BS Board","FS Board","FS 50","BS 50","FS Lip","BS Lip","Predator","FS Predator","Icepick","BS Overcrook","FS Icepick","FS Overcrook","Over 50","Over FS 50","BSCrook","FSCrook","Blunt","Backside Blunt","Over Ice","Over FS Ice"];
+export const railApproach = ["No trick","Fakie","wiskas","x up ride","switch","tap","nollie","Fakie Manual","fakie nose many"];
+export const railRotations = ["No trick","180° Backside","180° Frontside","270 fs","270 bs","360° back side","360 fronside"];
+export const railScooter = ["no trick","Bar","Tailwhip","heelwhip","x up","no hand","tabletop","lookback","turndown","tail grab","Double Barspin","nothing","banihana","Double Whip","double heel","bartwist","Fullwhip","full heel","finger","fingerheel","briwhip","untwist","rotorwhip","rotor heel","fulltwist","frontbri","inward","fullheeltwist","rotortwist","rotorheeltwist","finger rotor twist","finger rotor heeltwist"];
+export const railGrinds = ["bs board","fs board","fs 50","bs 50","fs lip","bs lip","feebzer","fs feebzer","fs lipzer","bs lipzer","predator","fs predator","icepick","bs overcrook","fs icepick","fs overcrook","over 50","over fs 50","fs nosegrind","bs nosegrind","bscrook","fscrook","blunt","backside blunt","over ice","over fs ice"];
 export const ledgeGrinds = ["Feeble","FS Feeble","Smith","FS Smith","BS Board","FS Board","FS 50","BS 50","FS Lip","BS Lip","Icepick","BS Overcrook","FS Icepick","FS Overcrook","Blunt","Backside Blunt","Wiskas Backside Feeble","Wiskas Frontside Feeble","Over Ice","Over FS Ice"];
 export const manualRides = ["Manual","Nose Manual","Wiskas","X-up Ride","No Hand Ride"];
 export const manualScooter = ["Bar","Tailwhip","X-up","No hand","Tabletop","Lookback","Tail grab","Double Barspin","Nothing","Banihana","Double Whip","Double Heel","Fullwhip","Full Heel","Finger","Fingerheel","Briwhip","Rotorwhip","Rotor Heel","Fulltwist","Whip Rewind","Heel Rewind","Frontbri","Inward","Buttercup","FS Buttercup","Fullheeltwist","Rotortwist","Rotorheeltwist","Flair","Backflip to Fakie"];
@@ -30,11 +33,14 @@ const rand=(min:number,max:number)=>Math.floor(Math.random()*(max-min+1))+min;
 const comboLength:Record<Difficulty,[number,number]> = {
   Easy:[3,5], Medium:[4,6], Hard:[5,7], Impossible:[6,9]
 };
-const add=(out:Stage[],type:string,trick:string)=>{if(trick!=="No trick")out.push({type,trick});};
-const pickVisible=(list:string[],d:Difficulty)=>pick(list.filter(x=>x!=="No trick"),d);
+const add=(out:Stage[],type:string,trick:string)=>{if(trick.toLowerCase()!=="no trick")out.push({type,trick});};
 const addExit=(out:Stage[],d:Difficulty,obstacle:Obstacle)=> {
   const candidate=Math.random()<0.5?pick(rotations,d):pick(obstacle==="Manual Pad"?manualScooter:scooter,d);
-  if(candidate!=="No trick")add(out,"Exit trick",candidate);
+  if(candidate.toLowerCase()!=="no trick")add(out,"Exit trick",candidate);
+};
+const addRailExit=(out:Stage[],d:Difficulty)=> {
+  const candidate=Math.random()<0.5?pick(railRotations,d):pick(railScooter,d);
+  if(candidate.toLowerCase()!=="no trick")add(out,"Exit trick",candidate);
 };
 
 export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail=false):Stage[] {
@@ -71,25 +77,30 @@ export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail
   const [minLength,maxLength]=comboLength[difficulty];
   const target=rand(minLength,maxLength);
   if(obstacle==="Rail"){
-    const grinds=squareRail?railGrinds:railGrinds.filter(x=>x!=="Blunt"&&x!=="Backside Blunt");
-    // Approach, rotation, scooter trick and exit are optional; at least one grind is guaranteed.
-    if(out.length<target-1&&Math.random()<0.5)add(out,"Approach",a());
-    if(out.length<target-1&&Math.random()<0.5)add(out,"Rotation",r());
-    if(out.length<target-1&&Math.random()<0.5)add(out,"Scooter trick",s());
-    let previousGrind=pick(grinds,difficulty);
+    const grinds=squareRail?railGrinds:railGrinds.filter(x=>x!=="blunt"&&x!=="backside blunt");
+    let selectedRotation="No trick";
+    if(out.length<target-1&&Math.random()<0.5)add(out,"Approach",pick(railApproach,difficulty));
+    if(out.length<target-1&&Math.random()<0.5){
+      selectedRotation=pick(railRotations,difficulty);
+      add(out,"Rotation",selectedRotation);
+    }
+    if(out.length<target-1&&Math.random()<0.5)add(out,"Scooter trick",pick(railScooter,difficulty));
+    const restricted=["bs lip","fs lip","bs board","fs board"];
+    const eligibleGrinds=selectedRotation==="270 fs"||selectedRotation==="270 bs"?grinds.filter(x=>restricted.includes(x)):grinds;
+    let previousGrind=pick(eligibleGrinds,difficulty);
     add(out,"Rail grind",previousGrind);
     while(out.length<target){
       if(Math.random()<0.45){
         const before=out.length;
-        addExit(out,difficulty,obstacle);
+        addRailExit(out,difficulty);
         if(out.length===before){
-          const available=grinds.filter(x=>x!==previousGrind);
-          previousGrind=pick(available,difficulty);
+          const available=eligibleGrinds.filter(x=>x!==previousGrind);
+          previousGrind=pick(available.length?available:eligibleGrinds,difficulty);
           add(out,"Rail grind",previousGrind);
         }
       } else {
-        const available=grinds.filter(x=>x!==previousGrind);
-        previousGrind=pick(available,difficulty);
+        const available=eligibleGrinds.filter(x=>x!==previousGrind);
+        previousGrind=pick(available.length?available:eligibleGrinds,difficulty);
         add(out,"Rail grind",previousGrind);
       }
     }
