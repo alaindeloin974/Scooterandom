@@ -95,9 +95,14 @@ export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail
       let allowed=rotationGrinds;
       if(previous==="bs board") allowed=allowed.filter(x=>!x.includes("lip")&&x!=="fs board");
       if(previous==="bs lip"||previous==="fs lip") allowed=allowed.filter(x=>x!=="fs board"&&x!=="bs board"&&x!=="bs lipzer");
+      if(previous==="180° Frontside") allowed=allowed.filter(x=>x!=="bs board");
+      if(previous==="180° Backside") allowed=allowed.filter(x=>x!=="fs board");
+      if(previous==="fs 50") allowed=allowed.filter(x=>x!=="bs board");
+      if(previous==="fs board") allowed=allowed.filter(x=>x!=="bs lip"&&x!=="bs lipzer");
       return allowed;
     };
-    let previousGrind=pick(rotationGrinds,difficulty);
+    const firstGrindOptions=nextGrinds(selectedRotation);
+    let previousGrind=pick(firstGrindOptions.length?firstGrindOptions:rotationGrinds,difficulty);
     add(out,"Rail grind",previousGrind);
     while(out.length<railTarget){
       if(Math.random()<0.45){
