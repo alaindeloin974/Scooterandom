@@ -14,7 +14,7 @@ export const manualRides = ["Manual","Nose Manual","Wiskas","X-up Ride","No Hand
 export const manualScooter = ["Bar","Tailwhip","X-up","No hand","Tabletop","Lookback","Tail grab","Double Barspin","Nothing","Banihana","Double Whip","Double Heel","Fullwhip","Full Heel","Finger","Fingerheel","Briwhip","Rotorwhip","Rotor Heel","Fulltwist","Whip Rewind","Heel Rewind","Frontbri","Inward","Buttercup","FS Buttercup","Fullheeltwist","Rotortwist","Rotorheeltwist","Flair","Backflip to Fakie"];
 
 const difficultyWindow: Record<Difficulty,[number,number]> = {
-  Easy:[0,0.42], Medium:[0.12,0.68], Hard:[0.38,0.88], Impossible:[0.62,1]
+  Easy:[0,0.3], Medium:[0.12,0.68], Hard:[0.38,0.88], Impossible:[0.62,1]
 };
 function weightedPick(list:string[], difficulty:Difficulty):string {
   if (!list.length) return "No trick";
