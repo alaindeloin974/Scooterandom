@@ -44,7 +44,9 @@ export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail
       const rotation=pick(rotations,difficulty);
       if(rotation!=="No trick")add(out,"Rotation",rotation);
     }
-    const aerialRange:Record<Difficulty,[number,number]>={Easy:[1,2],Medium:[1,3],Hard:[2,4],Impossible:[3,5]};\n    const [minAerial,maxAerial]=aerialRange[difficulty];\n    const aerialCount=rand(minAerial,maxAerial);
+    const aerialRange:Record<Difficulty,[number,number]>={Easy:[1,2],Medium:[1,3],Hard:[2,4],Impossible:[3,5]};
+    const [minAerial,maxAerial]=aerialRange[difficulty];
+    const aerialCount=rand(minAerial,maxAerial);
     for(let i=0;i<aerialCount && out.length<5;i++)add(out,"Aerial trick",s());
     return out.slice(0,5);
   }
