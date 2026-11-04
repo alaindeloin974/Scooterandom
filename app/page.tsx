@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { generateCombo, type Difficulty, type Obstacle, type Stage } from "@/lib/trick-data";
-import { Shuffle, Heart, Copy, Trophy, LogOut, Menu, X, Zap, RotateCcw } from "lucide-react";
+import { Disc3, Heart, Copy, Trophy, LogOut, Zap, RotateCcw } from "lucide-react";
 
 const obstacles: Obstacle[] = ["Rail","Ledge","Ramp","Manual Pad","Pyramid","Funbox"];
 const difficulties: Difficulty[] = ["Easy","Medium","Hard","Impossible"];
@@ -16,6 +16,7 @@ export default function Home(){
   const [difficulty,setDifficulty]=useState<Difficulty>("Easy");
   const [squareRail,setSquareRail]=useState(false);
   const [combo,setCombo]=useState<Stage[]>(()=>generateCombo("Rail","Easy"));
+  const [wheelSpinning,setWheelSpinning]=useState(false);
   const [saved,setSaved]=useState<string[]>([]);
   const [user,setUser]=useState<any>(null);
   const [email,setEmail]=useState("");
@@ -39,7 +40,8 @@ export default function Home(){
     return ()=>listener.subscription.unsubscribe();
   },[]);
 
-  const makeCombo=()=>setCombo(generateCombo(obstacle,difficulty,squareRail));
+  const makeCombo=()=>setWheelSpinning(true);
+  const finishWheelSpin=()=>{setCombo(generateCombo(obstacle,difficulty,squareRail));setWheelSpinning(false);};
   const comboText=(items:Stage[])=>items.map(x=>x.trick).join(" → ");
   const saveCombo=async()=>{
     const text=comboText(combo);
@@ -100,12 +102,12 @@ export default function Home(){
           <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3">{obstacles.map(o=><button key={o} onClick={()=>setObstacle(o)} className={`rounded-xl border-2 border-black px-3 py-3 text-sm font-black ${obstacle===o?"bg-[#c8f169]":"bg-white"}`}>{o}</button>)}</div>
           {obstacle==="Rail"&&<label className="mb-6 flex items-center gap-3 rounded-xl bg-orange-50 p-3 text-sm font-black"><input type="checkbox" checked={squareRail} onChange={e=>setSquareRail(e.target.checked)} className="h-5 w-5 accent-orange-500"/> SQUARE RAIL <span className="ml-auto text-xs font-semibold text-black/50">Blunts enabled</span></label>}
           <label className="mb-2 block text-xs font-black tracking-widest">DIFFICULTY</label><select value={difficulty} onChange={e=>setDifficulty(e.target.value as Difficulty)} className="mb-6 w-full rounded-xl border-2 border-black bg-white p-3 font-bold">{difficulties.map(d=><option key={d}>{d}</option>)}</select>
-          <button onClick={makeCombo} className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-black bg-[#ff9f1c] py-4 font-black shadow-[4px_4px_0_#171717]"><Shuffle size={18}/> GENERATE COMBO</button>
+          <button onClick={makeCombo} disabled={wheelSpinning} className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-black bg-[#ff9f1c] py-3 font-black shadow-[4px_4px_0_#171717] disabled:cursor-wait"><span onAnimationEnd={finishWheelSpin} className={wheelSpinning?"inline-flex animate-[spin_900ms_cubic-bezier(.2,.8,.2,1)]":"inline-flex"}><Disc3 size={42} strokeWidth={2.5}/></span><span>{wheelSpinning?"SPINNING...":"SPIN TO GENERATE"}</span></button>
           <p className="mt-4 text-xs font-semibold text-black/55">Combo length is randomized according to the obstacle. Difficulty changes trick complexity, not the length.</p>
         </div>
         <div className="rounded-[2rem] border-2 border-black bg-[#171717] p-6 text-white shadow-[7px_7px_0_#ff9f1c] md:p-8">
           <div className="flex items-center justify-between"><span className="text-xs font-black tracking-[.2em] text-[#c8f169]">YOUR LINE</span><span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold">{obstacle.toUpperCase()} / {difficulty.toUpperCase()}</span></div>
-          <div className="my-8 flex flex-col gap-3">{combo.map((stage,i)=><div key={i} className="flex items-center gap-3"><span className="w-7 text-xs font-black text-[#ff9f1c]">{String(i+1).padStart(2,"0")}</span><div className="flex-1 rounded-xl bg-[#c8f169] px-4 py-3 text-black"><span className="block text-[9px] font-black tracking-widest opacity-60">{stage.type.toUpperCase()}</span><span className="text-lg font-black">{stage.trick}</span></div></div>)}</div>
+          <div className="my-8 flex items-center gap-2 overflow-x-auto whitespace-nowrap pb-3">{combo.map((stage,i)=><div key={i} className="flex shrink-0 items-center gap-2"><div className="rounded-xl bg-[#c8f169] px-4 py-3 text-black"><span className="mr-2 text-[9px] font-black tracking-widest opacity-60">{stage.type.toUpperCase()}</span><span className="text-lg font-black">{stage.trick}</span></div>{i<combo.length-1&&<span className="text-xl font-black text-[#ff9f1c]">→</span>}</div>)}</div>
           <div className="flex flex-wrap gap-3 border-t border-white/20 pt-6"><button onClick={saveCombo} className="flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-black"><Heart size={16}/> SAVE COMBO</button><button onClick={()=>copyCombo(combo)} className="rounded-full border border-white/40 px-5 py-3 text-sm font-black"><Copy size={16} className="mr-2 inline"/>COPY LINE</button><button onClick={makeCombo} className="rounded-full border border-white/40 px-5 py-3 text-sm font-black"><RotateCcw size={16} className="mr-2 inline"/>REROLL</button></div>
           {saved.length>0&&<p className="mt-4 text-xs text-white/60">Saved this session: {saved.length} combo(s)</p>}
         </div>
