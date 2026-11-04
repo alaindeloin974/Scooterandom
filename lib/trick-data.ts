@@ -77,30 +77,40 @@ export function generateCombo(obstacle:Obstacle,difficulty:Difficulty,squareRail
   const [minLength,maxLength]=comboLength[difficulty];
   const target=rand(minLength,maxLength);
   if(obstacle==="Rail"){
+    // Rail combos are about 30% shorter; trick selection and difficulty weighting stay unchanged.
+    const railMin=Math.max(1,Math.round(minLength*0.7));
+    const railMax=Math.max(railMin,Math.round(maxLength*0.7));
+    const railTarget=rand(railMin,railMax);
     const grinds=squareRail?railGrinds:railGrinds.filter(x=>x!=="blunt"&&x!=="backside blunt");
     let selectedRotation="No trick";
-    if(out.length<target-1&&Math.random()<0.5)add(out,"Approach",pick(railApproach,difficulty));
-    if(out.length<target-1&&Math.random()<0.5){
+    if(out.length<railTarget-1&&Math.random()<0.5)add(out,"Approach",pick(railApproach,difficulty));
+    if(out.length<railTarget-1&&Math.random()<0.5){
       selectedRotation=pick(railRotations,difficulty);
       add(out,"Rotation",selectedRotation);
     }
-    if(out.length<target-1&&Math.random()<0.5)add(out,"Scooter trick",pick(railScooter,difficulty));
+    if(out.length<railTarget-1&&Math.random()<0.5)add(out,"Scooter trick",pick(railScooter,difficulty));
     const restricted=["bs lip","fs lip","bs board","fs board"];
-    const eligibleGrinds=selectedRotation==="270 fs"||selectedRotation==="270 bs"?grinds.filter(x=>restricted.includes(x)):grinds;
-    let previousGrind=pick(eligibleGrinds,difficulty);
+    const rotationGrinds=selectedRotation==="270 fs"||selectedRotation==="270 bs"?grinds.filter(x=>restricted.includes(x)):grinds;
+    const nextGrinds=(previous:string)=> {
+      let allowed=rotationGrinds;
+      if(previous==="bs board") allowed=allowed.filter(x=>!x.includes("lip")&&x!=="fs board");
+      if(previous==="bs lip"||previous==="fs lip") allowed=allowed.filter(x=>x!=="fs board"&&x!=="bs board"&&x!=="bs lipzer");
+      return allowed;
+    };
+    let previousGrind=pick(rotationGrinds,difficulty);
     add(out,"Rail grind",previousGrind);
-    while(out.length<target){
+    while(out.length<railTarget){
       if(Math.random()<0.45){
         const before=out.length;
         addRailExit(out,difficulty);
         if(out.length===before){
-          const available=eligibleGrinds.filter(x=>x!==previousGrind);
-          previousGrind=pick(available.length?available:eligibleGrinds,difficulty);
+          const available=nextGrinds(previousGrind).filter(x=>x!==previousGrind);
+          previousGrind=pick(available.length?available:rotationGrinds,difficulty);
           add(out,"Rail grind",previousGrind);
         }
       } else {
-        const available=eligibleGrinds.filter(x=>x!==previousGrind);
-        previousGrind=pick(available.length?available:eligibleGrinds,difficulty);
+        const available=nextGrinds(previousGrind).filter(x=>x!==previousGrind);
+        previousGrind=pick(available.length?available:rotationGrinds,difficulty);
         add(out,"Rail grind",previousGrind);
       }
     }
